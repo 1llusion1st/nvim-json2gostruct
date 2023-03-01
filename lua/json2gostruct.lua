@@ -62,7 +62,7 @@ function convert_json_to_gostruct(json_table, result_agregator, level)
 		local composed, array, typ = get_data_type(val, name)
 		-- print("composed", composed, "array", array, "typ", typ)
 		if #name > max_name_len then max_name_len = #name end
-		if #typ > max_type_len then max_name_len = #typ end
+		if #typ > max_type_len then max_type_len = #typ end
 	end
 	local fmt = string.format("%%-%ds    %%-%ds    `json:\"%%s\"`", max_name_len, max_type_len)
 	local fmt_composed = string.format("%%-%ds    %%-%ds {", max_name_len, max_type_len)
