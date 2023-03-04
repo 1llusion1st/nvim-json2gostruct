@@ -27,6 +27,7 @@ end
 
 
 function convert_json_to_gostruct(json_table, result_agregator, level)
+	-- print("convert_json_to_gostruct")
 	-- root call - initialize variables
 	if json_table == nil then
 		local text = get_visual_selection()
@@ -176,9 +177,11 @@ function to_camel_case(key)
 end
 
 function get_visual_selection()
+  -- print("get_visual_selection endtered")
   local s_start = vim.fn.getpos("'<")
   local s_end = vim.fn.getpos("'>")
   local n_lines = math.abs(s_end[2] - s_start[2]) + 1
+  -- print("n_lines = ", n_lines)
   local lines = vim.api.nvim_buf_get_lines(0, s_start[2] - 1, s_end[2], false)
   lines[1] = string.sub(lines[1], s_start[3], -1)
   if n_lines == 1 then
