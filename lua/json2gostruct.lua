@@ -107,7 +107,9 @@ function is_array_empty(tbl)
 end
 
 function convert_json_to_go_struct_in_memory(struct_name, json_table)
-	print("convert_json_to_go_struct_in_memory called: " .. dump(json_table))
+	if vim.g.debug_print == 1 then
+		print("convert_json_to_go_struct_in_memory called: " .. dump(json_table))
+	end
 	local results = convert_json_to_gostruct(struct_name, json_table)
 	return results
 end
@@ -115,14 +117,18 @@ end
 function convert_json_to_gostruct(struct_name, json_table, result_agregator, level, path)
 	if level == nil then level = 0 end
 	local prefix = (" "):rep(level * 4)
-
-	print("\n*\n*\n")
-	print(prefix .. "convert_json_to_gostruct", struct_name, json_table)
+	
+	if vim.g.debug_print == 1 then
+		print("\n*\n*\n")
+		print(prefix .. "convert_json_to_gostruct", struct_name, json_table)
+	end
 
 	local is_arr = is_array(json_table)
 	local is_simple = is_array_simple(json_table)
 	local is_empty = is_array_empty(json_table)
-	print(prefix .. "0. is_arr: ", is_arr, "is_simple: ", is_simple, "is_empty: ", is_empty)
+	if vim.g.debug_print == 1 then
+		print(prefix .. "0. is_arr: ", is_arr, "is_simple: ", is_simple, "is_empty: ", is_empty)
+	end
 
 	-- root call - initialize variables
 	if struct_name == nil then
@@ -152,18 +158,24 @@ function convert_json_to_gostruct(struct_name, json_table, result_agregator, lev
 				return
 			end
 		end
-		print("0. json_table:", json_table, type(json_table), dump(json_table))
+		if vim.g.debug_print == 1 then
+			print("0. json_table:", json_table, type(json_table), dump(json_table))
+		end
 		local result_agregator = {}
 
 		is_arr = is_array(json_table)
 		is_simple = is_array_simple(json_table)
 		is_empty = is_array_empty(json_table)
-		print(prefix .."1. is_arr: ", is_arr, "is_simple: ", is_simple, "is_empty: ", is_empty)
+		if vim.g.debug_print == 1 then
+			print(prefix .."1. is_arr: ", is_arr, "is_simple: ", is_simple, "is_empty: ", is_empty)
+		end
 
 		if not is_arr then
 
 			-- OBJECT
-			print(prefix .. "PROCESSING AS OBJECT ")
+			if vim.g.debug_print == 1 then
+				print(prefix .. "PROCESSING AS OBJECT ")
+			end
 			table.insert(result_agregator, "type ".. struct_name .. " struct {")
 			convert_json_to_gostruct("", json_table, result_agregator, 1, path)
 			table.insert(result_agregator, "}")
@@ -171,22 +183,28 @@ function convert_json_to_gostruct(struct_name, json_table, result_agregator, lev
 		elseif is_arr and not is_empty and not is_simple then
 			
 			-- ARRAY of OBJECT
-			print(prefix .. "PROCESSING AS ARRAY of OBJECT ")
-			table.insert(result_agregator, "type ".. struct_name .. " []struct {")
+			if vim.g.debug_print == 1 then
+				print(prefix .. "PROCESSING AS ARRAY of OBJECT ")
+			end
+						table.insert(result_agregator, "type ".. struct_name .. " []struct {")
 			convert_json_to_gostruct("", json_table[1], result_agregator, 1, path)
 			table.insert(result_agregator, "}")
 
 		elseif is_arr and not is_empty and is_simple then
 
 			-- ARRAY of TYPE
-			print(prefix .. "PROCESSING AS ARRAY of TYPE ")
-			_, _, typ = get_data_type(json_table[1])
+			if vim.g.debug_print == 1 then
+				print(prefix .. "PROCESSING AS ARRAY of TYPE ")
+			end
+						_, _, typ = get_data_type(json_table[1])
 			table.insert(result_agregator, "type ".. struct_name .. " []"..typ)
 
 		elseif is_arr then
 
 			-- EMPTY ARRAY
-			print(prefix .. "PROCESSING AS ARRAY EMPTY ")
+			if vim.g.debug_print == 1 then
+				print(prefix .. "PROCESSING AS ARRAY EMPTY ")
+			end
 			table.insert(result_agregator, "type ".. struct_name .. " []".."interface{}")
 
 		end
@@ -200,16 +218,22 @@ function convert_json_to_gostruct(struct_name, json_table, result_agregator, lev
 		return result_agregator
 	end
 	-- running nodes parser
-	print(prefix .. "processing json_table: ", type(json_table), json_table, " result_agregator: ", type(result_agregator), result_agregator)
-	print(prefix .. "path: ", dump(path))
-	print(prefix .."table: ", dump(json_table))
+	if vim.g.debug_print == 1 then
+		print(prefix .. "processing json_table: ", type(json_table), json_table, " result_agregator: ", type(result_agregator), result_agregator)
+		print(prefix .. "path: ", dump(path))
+		print(prefix .."table: ", dump(json_table))
+	end
 	local max_name_len = 6
 	local max_type_len = 13 -- []interface{}
 	for key, val in pairs(json_table) do
-		print(prefix .. "processing ", key, val)
+		if vim.g.debug_print == 1 then
+			print(prefix .. "processing ", key, val)
+		end
 		local name = to_camel_case(key)
 		local composed, array, typ = get_data_type(val, name)
-		print(prefix .."composed", composed, "array", array, "typ", typ)
+		if vim.g.debug_print == 1 then
+			print(prefix .."composed", composed, "array", array, "typ", typ)
+		end
 		if #name > max_name_len then max_name_len = #name end
 		if #typ > max_type_len then max_type_len = #typ end
 	end
@@ -217,16 +241,21 @@ function convert_json_to_gostruct(struct_name, json_table, result_agregator, lev
 	local fmt_composed = string.format("%%-%ds    %%-%ds {", max_name_len, max_type_len)
 	local fmt_composed_type = string.format("%%-%ds    %%-%ds    `json:\"%%s\"`", max_name_len, max_type_len)
 	local fmt_composed_empty = string.format("%%-%ds    %%-%ds    `json:\"%%s\"`", max_name_len, max_type_len)
-
-	print(prefix .. "GENERATING KEYs ...")
-
+	
+	if vim.g.debug_print == 1 then
+		print(prefix .. "GENERATING KEYs ...")
+	end
+	
 	for key, value in pairs(json_table) do
 		local currentPath = table.shallow_copy(path)
-
-		print(prefix .. "key: ", key, "value: ", type(value), value)
+		if vim.g.debug_print == 1 then
+			print(prefix .. "key: ", key, "value: ", type(value), value)
+		end
 		local name = to_camel_case(key)
 		local composed, array, typ = get_data_type(value, name)
-		print(prefix .. "composed:", composed, "array:", array, "typ:", typ)
+		if vim.g.debug_print == 1 then
+			print(prefix .. "composed:", composed, "array:", array, "typ:", typ)
+		end
 		if options ~= nil then
 			if meta ~= nil then
 			end
@@ -236,11 +265,15 @@ function convert_json_to_gostruct(struct_name, json_table, result_agregator, lev
 			is_arr = is_array(value)
 			is_simple = is_array_simple(value)
 			is_empty = is_array_empty(value)
-			print(prefix .. "V. is_arr: ", is_arr, " is_simple: ", is_simple, " is_empty:", is_empty)
-			
+			if vim.g.debug_print == 1 then
+				print(prefix .. "V. is_arr: ", is_arr, " is_simple: ", is_simple, " is_empty:", is_empty)
+			end
+						
 			if is_arr == false then
-				print(prefix .. "PROCESSING AS OBJECT " .. key)
-
+				if vim.g.debug_print == 1 then
+					print(prefix .. "PROCESSING AS OBJECT " .. key)
+				end
+				
 				-- OBJECT
 				table.insert(result_agregator,
 					prefix .. string.format(
@@ -256,7 +289,10 @@ function convert_json_to_gostruct(struct_name, json_table, result_agregator, lev
 				if is_arr and not is_empty and not is_simple then
 			
 					-- ARRAY of OBJECT
-					print(prefix .. "PROCESSING AS ARRAY of OBJECT " .. key)
+					if vim.g.debug_print == 1 then
+						print(prefix .. "PROCESSING AS ARRAY of OBJECT " .. key)	
+					end
+					
 					table.insert(result_agregator,
 						prefix .. string.format(
 							fmt_composed, name, typ))
@@ -266,8 +302,10 @@ function convert_json_to_gostruct(struct_name, json_table, result_agregator, lev
 						prefix .. string.format("}    `json:\"%s\"`", key))
 
 				elseif is_arr and not is_empty and is_simple then
-					print(prefix .. "PROCESSING AS ARRAY of TYPE " .. key)
-
+					if vim.g.debug_print == 1 then
+						print(prefix .. "PROCESSING AS ARRAY of TYPE " .. key)
+					end
+					
 					-- ARRAY of TYPE
 					table.insert(result_agregator,
 						prefix .. string.format(
@@ -276,7 +314,10 @@ function convert_json_to_gostruct(struct_name, json_table, result_agregator, lev
 				elseif is_arr and is_empty then
 
 					-- EMPTY ARRAY
-					print(prefix .. "PROCESSING AS ARRAY EMPTY " .. key)
+					if vim.g.debug_print == 1 then
+						print(prefix .. "PROCESSING AS ARRAY EMPTY " .. key)
+					end
+	
 					table.insert(result_agregator,
 						prefix .. string.format(
 							fmt_composed_empty, name, "[]interface{}", key))
