@@ -383,7 +383,7 @@ function get_visual_selection()
   return table.concat(lines, '\n')
 end
 
-print(to_camel_case("rpc_network_info"))
+-- print(to_camel_case("rpc_network_info"))
 
 return {
 	Json2GoStruct = convert_json_to_gostruct,
