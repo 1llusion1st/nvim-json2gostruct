@@ -2,15 +2,25 @@
 require("os")
 
 cjson = require("cjson")
+
+local decode_json
+
+if vim.json ~= nil and vim.json.decode ~= nil then
+  decode_json = function(raw)
+    return vim.json.decode(raw)
+  end
+
+else
+  decode_json = function(raw)
+    return cjson.decode(raw)
+  end
+end
+
 io = require("io")
 math = require("math")
 
 local buf, win
 local position = 0
-
-function decode_json(raw)
-	return cjson.decode(raw)
-end
 
 function dump(o)
    if type(o) == 'table' then
