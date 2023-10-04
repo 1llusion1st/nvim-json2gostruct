@@ -1,8 +1,6 @@
 -- ```lua
 require("os")
 
-cjson = require("cjson")
-
 local decode_json
 
 if vim.json ~= nil and vim.json.decode ~= nil then
@@ -11,6 +9,7 @@ if vim.json ~= nil and vim.json.decode ~= nil then
   end
 
 else
+  cjson = require("cjson")
   decode_json = function(raw)
     return cjson.decode(raw)
   end
